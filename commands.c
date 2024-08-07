@@ -33,6 +33,8 @@ void help_command()
 	  printf("8- envir:print all enviroment variables.\n");
 	  printf("9- myfree:print Mem and Swap available and used and total sizes.\n");
 	  printf("10- myuptime:print uptime sys and time idle.\n");
+	  printf("11- phist:print history of last 10 commands.\n");
+
 }
 /********internal echo command function********/
 void echo_command(char *args[])
@@ -595,11 +597,9 @@ void redir_command(int type,char *file,int location)
 			size_t len=strlen(args[lastIndex]);
                 /*remove'"' if it exist in last string to echo*/
                 if(len>0 &&args[lastIndex][len-1]=='\"'){
-                        args[lastIndex][len-1]='\0';
+                        args[lastIndex][len-1]='\0';}
 		}
 	}
-	}
-         
 
 	 /*remove redirection symbol from args*/
 	 args[location]=NULL;
@@ -617,7 +617,129 @@ void redir_command(int type,char *file,int location)
 		 }
 	 }
 	 cleaned_args[j]=NULL;
+	 /*********** check if command is built in ***************/
+         if (strcmp(args[0], "myecho") == 0 ||strcmp(args[0], "mycp") == 0 ||strcmp(args[0], "mymv") == 0 ||
+             strcmp(args[0], "exit") == 0 ||strcmp(args[0], "mypwd") == 0 ||strcmp(args[0], "cd") == 0 ||
+             strcmp(args[0], "type") == 0 ||strcmp(args[0], "envir") == 0 ||strcmp(args[0], "help") == 0 ||
+             strcmp(args[0], "myfree") == 0 ||strcmp(args[0], "myuptime") == 0 ||strcmp(args[0], "phist") == 0)
+           {
+		   if(type==0){
+			 /*redirect file to 0 instead of oldfd*/
+			 oldfd =open(file, O_RDONLY);
 
+			 if(oldfd<3)
+			 {
+				 printf("error fd < 3\n");
+			 }
+			 if(dup2(oldfd,type)<0)
+				 perror("dup2");
+			 close(oldfd);
+		 }
+		 else if(type==1){
+                         /*redirect file to 1 instead of oldfd*/
+                         oldfd =open(file,O_WRONLY|O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+
+                         if(oldfd<3)
+                         {
+                                 printf("error fd < 3\n");
+                         }
+                         if(dup2(oldfd,type)<0)
+                                 perror("dup2");
+			 close(oldfd);
+                 }
+                 else if(type==2){
+                         /*redirect file to 2 instead of oldfd*/
+                         oldfd =open(file,O_WRONLY|O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+
+                         if(oldfd<3)
+                         {
+                                 printf("error fd < 3\n");
+                         }
+                         if(dup2(oldfd,type)<0)
+                                 perror("dup2");
+			 close(oldfd);
+                 }
+                 else if(type==3){
+                         /*redirect file to 1 instead of oldfd*/
+                         oldfd =open(file,O_WRONLY|O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+
+                         if(oldfd<3)
+                         {
+                                 printf("error fd < 3\n");
+                         }
+                         if(dup2(oldfd,1)<0)
+                                 perror("dup2");
+			 close(oldfd);
+		 }
+
+		 /* internal echo command */
+		 if(strcmp(args[0],"myecho")==0)
+			 echo_command(cleaned_args);
+
+		 /* internal copy command */
+		 else if(strcmp(args[0],"mycp")==0)
+		 {/*to check if source and target file is passed or not*/
+			 if (argIndex < 3)
+				 fprintf(stderr, "Usage: %s <str1> <str2> [<len>]\n", args[0]);
+			 else
+				 copy_move_command(args);
+		 }
+
+		 /* internal move command*/
+		 else if(strcmp(args[0],"mymv")==0)
+		 {/*to check if source and target file is passed  or not*/
+			 if (argIndex < 3)
+				 fprintf(stderr, "Usage: %s <str1> <str2> [<len>]\n", args[0]);
+			 else
+				 copy_move_command(args);
+		 }
+
+		 /* exit command */
+		 else if(strcmp(args[0],"exit")==0)
+			 exit_command();
+
+               /*internal pwd command */
+               else if(strcmp(args[0],"mypwd")==0)
+		         pwd_command();
+
+              /* cd command */
+              else if(strcmp(args[0],"cd")==0)
+	      {
+		      if(argIndex<2)
+			cd_command(NULL);
+		      else
+			cd_command(args[1]);
+	      }
+	         /*type command */
+		 else if(strcmp(args[0],"type")==0)
+			 type_command(cleaned_args);
+
+                /* envir command */
+                else if(strcmp(args[0],"envir")==0)
+		         envir_command();
+
+                /* help command */
+                else if(strcmp(args[0],"help")==0)
+		         help_command();
+
+                /*internal free command */
+                else if(strcmp(args[0],"myfree")==0)
+		         free_command();
+
+               /*internal uptime command */
+                else if(strcmp(args[0],"myuptime")==0)
+		         uptime_command();
+
+                /*internal phist command */
+                else if(strcmp(args[0],"phist")==0)
+	                 phist_command();
+
+
+           }
+
+	  else{
+
+         /*external command*/
 	 int retpid=fork();
 
 	 if(retpid==0)
@@ -684,5 +806,6 @@ void redir_command(int type,char *file,int location)
 	 else {/*PARENT PROCESS*/
 		 wait(NULL);
 	 }
+}
 }
 

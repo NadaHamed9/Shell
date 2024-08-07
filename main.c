@@ -213,6 +213,8 @@ int main(int argc , char** argv)
          {
 		 flag=1;
 		 redir_command(0,args[i+1],i);
+		 if(strcmp(args[0],"exit")==0)
+			 return 0;
 		 break;
          }
 
@@ -221,6 +223,9 @@ int main(int argc , char** argv)
          {
 		 flag=1;
                  redir_command(1,args[i+1],i);
+		 if(strcmp(args[0],"exit")==0)
+                         return 0;
+
 		 break;
          }
 
@@ -229,6 +234,9 @@ int main(int argc , char** argv)
          {
 		 flag=1;
                  redir_command(2,args[i+1],i);
+		 if(strcmp(args[0],"exit")==0)
+                         return 0;
+
 		 break;
          }
 
@@ -237,6 +245,9 @@ int main(int argc , char** argv)
          {
                  flag=1;
                  redir_command(3,args[i+1],i);
+		 if(strcmp(args[0],"exit")==0)
+                         return 0;
+
 		 break;
          }
 
