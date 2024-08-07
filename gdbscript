@@ -1,0 +1,44 @@
+# Load the program
+file ./shell
+
+# Set a breakpoint at the beginning of main function
+break main
+
+# Run the program
+run
+print phist_command
+# Define maximum history size
+set $HISTORY_SIZE_gdb = 1024
+set $histIndex_gdb = 0
+
+# Define arrays for command history
+set $hist[$HISTORY_SIZE_gdb]
+
+# Define a custom command to log commands
+define log_command
+    # Log the command
+    if $histIndex_gdb >= $HISTORY_SIZE_gdb - 1
+        echo HISTORY IS FULL, CANNOT ADD MORE COMMANDS\n
+    else
+        # Save the current command to history
+        set $x=0
+        while(x<argIndex)
+        set $hist[$histIndex_gdb] = args[$x]
+        set $histIndex_gdb = $histIndex_gdb + 1
+    end
+end
+
+end
+
+# Define a command to print the command history
+define print_history
+    set $i = 0
+    while $i < $histIndex_gdb
+        echo $i ": " $hist[$i] "\n"
+        set $i = $i + 1
+    end
+end
+
+
+
+
