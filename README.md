@@ -30,7 +30,7 @@ This project implements a custom shell that supports a variety of built-in and e
 - Execute programs using their names directly (without needing to specify the full path).
 - Commands are executed with dynamically allocated argument lists, ensuring flexibility and no memory leaks.
 - Proper memory management is implemented to handle allocated resources efficiently.
-- Redirection is also supported. You can try:
+- Redirection to input,output,error and append is also supported. You can try:
     ```sh
   echo hello world > welcome.txt
     cat < welcome.txt
@@ -54,6 +54,13 @@ Here is an example of the shell output:
 ![My Image](nada.png)
 
 ![My Image](sama.png)
+
+## Video Illustration
+
+To get a visual demonstration of the shell in action and used gdbscript, you can watch the following video:
+
+[Watch the Shell Demonstration](https://drive.google.com/file/d/1D2u0lb4sz1OLAr5F_jVc0alyda5k24-t/view?usp=sharing)
+
 
 ## Building and Running
 
