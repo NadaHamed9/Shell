@@ -30,7 +30,7 @@ This project implements a custom shell that supports a variety of built-in and e
 - Execute programs using their names directly (without needing to specify the full path).
 - Commands are executed with dynamically allocated argument lists, ensuring flexibility and no memory leaks.
 - Proper memory management is implemented to handle allocated resources efficiently.
-- Redirection to input,output,error and append is also supported. You can try:
+- Redirection to input , output , error and append is also supported. You can try:
     ```sh
   echo hello world > welcome.txt
     cat < welcome.txt
