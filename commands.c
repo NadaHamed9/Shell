@@ -862,43 +862,34 @@ int  pipe_check()
 {
 	for(int i=0;i<argIndex;i++)
 	{
-            /*its pipe command*/
-               if(strcmp(args[i],"|")==0)
-               {
-
-             int pipe_pos=i;
-            /*dynamically allocates memory for argList1*/
-             argList1=malloc((pipe_pos)*sizeof(char* ));
-           /*if theres failure in malloc*/
-             if(argList1==NULL)
-            perror("malloc");
-
-            for (int i=0;i<pipe_pos;i++)
-            {/*storing tokenised commands before pipe in argList*/
-                argList1[i]=args[i];
-            }
-
-           /*terminate argList by NULL*/
-             argList1[pipe_pos]=NULL;
-
-           /*dynamically allocates memory for argList2*/
-            argList2=malloc(((argIndex-pipe_pos)-1)*sizeof(char* ));
-           /*if theres failure in malloc*/
-            if(argList2==NULL)
-           perror("malloc");
-
-          int initial =pipe_pos+1;
-
-          for (int i=0;i<((argIndex-pipe_pos)-1);i++)
-          {/*storing tokenised commands after pipe in argList*/
-                 argList2[i]=args[initial];
-
-                printf("%s ",argList2[i]);
-          }
-	   /*terminate argList2 by NULL*/
-           argList2[((argIndex-pipe_pos)-1)]=NULL;
-
-	  return 1; //theres pipe
+		/*its pipe command*/
+		if(strcmp(args[i],"|")==0)
+		{
+			int pipe_pos=i;
+			/*dynamically allocates memory for argList1*/
+			argList1=malloc((pipe_pos)*sizeof(char* ));
+                       /*if theres failure in malloc*/
+			if(argList1==NULL)
+				perror("malloc");
+			for (int i=0;i<pipe_pos;i++)
+			{/*storing tokenised commands before pipe in argList*/
+				argList1[i]=args[i];
+			}
+			/*terminate argList by NULL*/
+			argList1[pipe_pos]=NULL;
+			/*dynamically allocates memory for argList2*/
+			argList2=malloc(((argIndex-pipe_pos)-1)*sizeof(char* ));
+			/*if theres failure in malloc*/
+			if(argList2==NULL)
+				perror("malloc");
+			int initial =pipe_pos+1;
+			for (int i=0;i<((argIndex-pipe_pos)-1);i++)
+			{/*storing tokenised commands after pipe in argList*/
+				argList2[i]=args[initial];
+				printf("%s ",argList2[i]);
+			}/*terminate argList2 by NULL*/
+			argList2[((argIndex-pipe_pos)-1)]=NULL;
+			return 1; //theres pipe
 	       }
 	}
 	return 0; //no pipe
