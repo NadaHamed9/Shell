@@ -55,6 +55,11 @@ Here is an example of the shell output:
 
 ![My Image](sama.png)
 
+## Issues i faced and fixed 
+
+Here is output of redirection with internal commands:
+![My Image](internal.png)
+
 ## Video Illustration
 
 To get a visual demonstration of the shell in action and used gdbscript, you can watch the following video:
