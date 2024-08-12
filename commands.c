@@ -581,9 +581,14 @@ void phist_command()
 /*********************** redir command function ***********/
 void redir_command(int type,char *file,int location)
 {
-	
-	int oldfd;
-	if(strcmp(args[0],"myecho")==0 || strcmp(args[0],"echo")==0)
+	if(file==NULL)
+	{
+		fprintf(stderr,"NO FILE FOR REDIRECTION\n");
+		return;
+	}
+
+	/*if command is echo to remove "" from atring */
+	if( strcmp(args[0],"echo")==0)
 	{
 		/*remove'"' if it exist in first string to echo*/
 		if (args[1]!=NULL && args[1][0]=='\"'){
@@ -601,13 +606,16 @@ void redir_command(int type,char *file,int location)
 		}
 	}
 
-	 /*remove redirection symbol from args*/
-	 args[location]=NULL;
-	 /*remove file from args*/
-         args[location+1]=NULL;
+	int saved_fd;
+	int oldfd;
 
-	 char *cleaned_args[100];
-	 int j=0;
+	/*remove redirection symbol from args*/
+	args[location]=NULL;
+	/*remove file from args*/
+	args[location+1]=NULL;
+	char *cleaned_args[100];
+	int j=0;
+
 	 for(int i=0;i<argIndex;i++)
 	 {
 		 if(args[i]!=NULL)
@@ -617,57 +625,74 @@ void redir_command(int type,char *file,int location)
 		 }
 	 }
 	 cleaned_args[j]=NULL;
+
 	 /*********** check if command is built in ***************/
          if (strcmp(args[0], "myecho") == 0 ||strcmp(args[0], "mycp") == 0 ||strcmp(args[0], "mymv") == 0 ||
              strcmp(args[0], "exit") == 0 ||strcmp(args[0], "mypwd") == 0 ||strcmp(args[0], "cd") == 0 ||
              strcmp(args[0], "type") == 0 ||strcmp(args[0], "envir") == 0 ||strcmp(args[0], "help") == 0 ||
              strcmp(args[0], "myfree") == 0 ||strcmp(args[0], "myuptime") == 0 ||strcmp(args[0], "phist") == 0)
            {
+		   
 		   if(type==0){
 			 /*redirect file to 0 instead of oldfd*/
 			 oldfd =open(file, O_RDONLY);
 
+			 /*save STDIN before redir*/
+			 saved_fd=dup(STDIN_FILENO);
+
 			 if(oldfd<3)
 			 {
-				 printf("error fd < 3\n");
+				 printf("error fd is < 3\n");
 			 }
-			 if(dup2(oldfd,type)<0)
+			 if(dup2(oldfd,STDIN_FILENO)<0)
 				 perror("dup2");
 			 close(oldfd);
 		 }
 		 else if(type==1){
                          /*redirect file to 1 instead of oldfd*/
-                         oldfd =open(file,O_WRONLY|O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+                         oldfd =open(file,O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
+
+			  /*save STDOUT before redir*/
+                         saved_fd=dup(STDOUT_FILENO);
+			 
 
                          if(oldfd<3)
                          {
-                                 printf("error fd < 3\n");
+                                 printf("error fd is < 3\n");
                          }
-                         if(dup2(oldfd,type)<0)
+                         if(dup2(oldfd,STDOUT_FILENO)<0)
                                  perror("dup2");
 			 close(oldfd);
+			 
                  }
                  else if(type==2){
-                         /*redirect file to 2 instead of oldfd*/
-                         oldfd =open(file,O_WRONLY|O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+                         /*redirect file to error instead of oldfd*/
+			 oldfd =open(file,O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
+
+			 /*save STDERR before redir */
+                         saved_fd=dup(STDERR_FILENO);
 
                          if(oldfd<3)
                          {
-                                 printf("error fd < 3\n");
+                                 printf("error fd is < 3\n");
                          }
-                         if(dup2(oldfd,type)<0)
+                         if(dup2(oldfd,STDERR_FILENO)<0)
                                  perror("dup2");
 			 close(oldfd);
                  }
                  else if(type==3){
-                         /*redirect file to 1 instead of oldfd*/
+                         /*redirect file to append instead of oldfd*/
                          oldfd =open(file,O_WRONLY|O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+
+			 /*save STDOUT  before redir*/
+                         saved_fd=dup(STDOUT_FILENO);
+
 
                          if(oldfd<3)
                          {
-                                 printf("error fd < 3\n");
+                                 printf("error fd is < 3\n");
                          }
-                         if(dup2(oldfd,1)<0)
+                         if(dup2(oldfd,STDOUT_FILENO)<0)
                                  perror("dup2");
 			 close(oldfd);
 		 }
@@ -682,7 +707,7 @@ void redir_command(int type,char *file,int location)
 			 if (argIndex < 3)
 				 fprintf(stderr, "Usage: %s <str1> <str2> [<len>]\n", args[0]);
 			 else
-				 copy_move_command(args);
+				 copy_move_command(cleaned_args);
 		 }
 
 		 /* internal move command*/
@@ -691,26 +716,24 @@ void redir_command(int type,char *file,int location)
 			 if (argIndex < 3)
 				 fprintf(stderr, "Usage: %s <str1> <str2> [<len>]\n", args[0]);
 			 else
-				 copy_move_command(args);
+				 copy_move_command(cleaned_args);
 		 }
 
 		 /* exit command */
 		 else if(strcmp(args[0],"exit")==0)
 			 exit_command();
-
-               /*internal pwd command */
-               else if(strcmp(args[0],"mypwd")==0)
+		 /*internal pwd command */
+		 else if(strcmp(args[0],"mypwd")==0)
 		         pwd_command();
-
-              /* cd command */
-              else if(strcmp(args[0],"cd")==0)
-	      {
-		      if(argIndex<2)
-			cd_command(NULL);
-		      else
-			cd_command(args[1]);
-	      }
-	         /*type command */
+		 /* cd command */
+		 else if(strcmp(args[0],"cd")==0)
+		 {
+			 if(argIndex<2)
+				 cd_command(NULL);
+			 else
+				 cd_command(cleaned_args[1]);
+		 }
+		 /*type command */
 		 else if(strcmp(args[0],"type")==0)
 			 type_command(cleaned_args);
 
@@ -718,7 +741,7 @@ void redir_command(int type,char *file,int location)
                 else if(strcmp(args[0],"envir")==0)
 		         envir_command();
 
-                /* help command */
+		/* help command */
                 else if(strcmp(args[0],"help")==0)
 		         help_command();
 
@@ -734,6 +757,32 @@ void redir_command(int type,char *file,int location)
                 else if(strcmp(args[0],"phist")==0)
 	                 phist_command();
 
+		/*restore again fd of the file*/
+		switch(type)
+		{
+			case 0:/*in case of input redir*/
+				if(dup2(saved_fd,STDIN_FILENO)<0)
+                                 perror("dup2");
+				close(saved_fd);
+				break;
+			case 1:/*incase of output redir*/
+                                if(dup2(saved_fd,STDOUT_FILENO)<0)
+                                 perror("dup2");
+                                close(saved_fd);
+                                break;
+			case 2:/*incase of error redir */
+                                if(dup2(saved_fd,STDERR_FILENO)<0)
+                                 perror("dup2");
+                                close(saved_fd);
+                                break;
+			case 3:/*incase of append redir */
+                                if(dup2(saved_fd,STDOUT_FILENO)<0)
+                                 perror("dup2");
+                                close(saved_fd);
+                                break;
+
+
+		}
 
            }
 
@@ -747,50 +796,50 @@ void redir_command(int type,char *file,int location)
 		 /*CHILD PROCESS*/
 		 printf("child");
 		 if(type==0){
-			 /*redirect file to 0 instead of oldfd*/
+			 /*redirect file to INPUT instead of oldfd*/
 			 oldfd =open(file, O_RDONLY);
 
 			 if(oldfd<3)
 			 {
 				 printf("error fd < 3\n");
 			 }
-			 if(dup2(oldfd,type)<0)
+			 if(dup2(oldfd,STDIN_FILENO)<0)
 				 perror("dup2");
 			 close(oldfd);
 		 }
 		 else if(type==1){
-                         /*redirect file to 1 instead of oldfd*/
-                         oldfd =open(file,O_WRONLY|O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+                         /*redirect file to OUTPUT instead of oldfd*/
+                         oldfd =open(file,O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
 
                          if(oldfd<3)
                          {
                                  printf("error fd < 3\n");
                          }
-                         if(dup2(oldfd,type)<0)
+                         if(dup2(oldfd,STDOUT_FILENO)<0)
                                  perror("dup2");
 			 close(oldfd);
                  }
                  else if(type==2){
-                         /*redirect file to 2 instead of oldfd*/
-                         oldfd =open(file,O_WRONLY|O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+                         /*redirect file to ERROR instead of oldfd*/
+                         oldfd =open(file,O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
 
                          if(oldfd<3)
                          {
                                  printf("error fd < 3\n");
                          }
-                         if(dup2(oldfd,type)<0)
+                         if(dup2(oldfd,STDERR_FILENO)<0)
                                  perror("dup2");
 			 close(oldfd);
                  }
                  else if(type==3){
-                         /*redirect file to 1 instead of oldfd*/
+                         /*redirect file to APPEND instead of oldfd*/
                          oldfd =open(file,O_WRONLY|O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
 
                          if(oldfd<3)
                          {
                                  printf("error fd < 3\n");
                          }
-                         if(dup2(oldfd,1)<0)
+                         if(dup2(oldfd,STDOUT_FILENO)<0)
                                  perror("dup2");
 			 close(oldfd);
                  }
@@ -808,4 +857,95 @@ void redir_command(int type,char *file,int location)
 	 }
 }
 }
+/*check for pipe function */
+int  pipe_check()
+{
+	for(int i=0;i<argIndex;i++)
+	{
+            /*its pipe command*/
+               if(strcmp(args[i],"|")==0)
+               {
 
+             int pipe_pos=i;
+            /*dynamically allocates memory for argList1*/
+             argList1=malloc((pipe_pos)*sizeof(char* ));
+           /*if theres failure in malloc*/
+             if(argList1==NULL)
+            perror("malloc");
+
+            for (int i=0;i<pipe_pos;i++)
+            {/*storing tokenised commands before pipe in argList*/
+                argList1[i]=args[i];
+            }
+
+           /*terminate argList by NULL*/
+             argList1[pipe_pos]=NULL;
+
+           /*dynamically allocates memory for argList2*/
+            argList2=malloc(((argIndex-pipe_pos)-1)*sizeof(char* ));
+           /*if theres failure in malloc*/
+            if(argList2==NULL)
+           perror("malloc");
+
+          int initial =pipe_pos+1;
+
+          for (int i=0;i<((argIndex-pipe_pos)-1);i++)
+          {/*storing tokenised commands after pipe in argList*/
+                 argList2[i]=args[initial];
+
+                printf("%s ",argList2[i]);
+          }
+	   /*terminate argList2 by NULL*/
+           argList2[((argIndex-pipe_pos)-1)]=NULL;
+
+	  return 1; //theres pipe
+	       }
+	}
+	return 0; //no pipe
+}
+
+/*redirection check function */
+int redir_check()
+{
+	for(int i=0;i<argIndex;i++){
+	/*its input redirection command*/
+          if(strcmp(args[i],"<")==0)
+         {
+                 redir_command(0,args[i+1],i);
+                 if(strcmp(args[0],"exit")==0)
+                         return 0;
+
+                 return 1;//theres redir
+         }
+
+          /*its output redirection command*/
+         else if(strcmp(args[i],">")==0)
+         {
+                 redir_command(1,args[i+1],i);
+                 if(strcmp(args[0],"exit")==0)
+                         return 0;
+
+                 return 1;//theres redir
+         }
+
+          /*its error redirection command*/
+         else if(strcmp(args[i],"2>")==0)
+         {
+                 redir_command(2,args[i+1],i);
+                 if(strcmp(args[0],"exit")==0)
+                         return 0;
+
+                 return 1;//theres redir
+         }
+
+        /*its append redirection command*/
+         else if(strcmp(args[i],">>")==0)
+         {
+                 redir_command(3,args[i+1],i);
+                 if(strcmp(args[0],"exit")==0)
+                         return 0;
+		 return 1;//theres redir
+	 }
+	}
+	return 0; //no redir
+}

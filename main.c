@@ -58,10 +58,22 @@ int main(int argc , char** argv)
 	}
         args[argIndex]=NULL;
 
+	history_log();
+/************* check for pipe **********/
+	if(pipe_check())
+	{
+		pipe_command(argList1,argList2);
+		free(argList1);
+                free(argList2);
+	}
+/*********** check for redirection **********/	
+	else if (redir_check())
+	{
+		//redir is done
+	}
 /********** internal echo command *************/
-          if(strcmp(args[0],"myecho")==0)
+	else if(strcmp(args[0],"myecho")==0)
         {
-		history_log();
 		echo_command(args);
         }
 /********** internal copy command *************/
@@ -69,27 +81,22 @@ int main(int argc , char** argv)
        {/*to check if source and target file is passed or not*/
          if (argIndex < 3)
            fprintf(stderr, "Usage: %s <str1> <str2> [<len>]\n", args[0]);
-         else{
-		 history_log();
-
+         else
                 copy_move_command(args);
-	 }
        }
 /********** internal move command *************/
         else if(strcmp(args[0],"mymv")==0)
        {/*to check if source and target file is passed  or not*/
          if (argIndex < 3)
            fprintf(stderr, "Usage: %s <str1> <str2> [<len>]\n", args[0]);
-        else{
-		history_log();
-               copy_move_command(args);
-	}
+        else
+	      copy_move_command(args);
+	
        }
 
 /********* exit command *********/
         else if(strcmp(args[0],"exit")==0)
 	{
-		history_log();
                 exit_command();
 	        return 0;
 	}
@@ -97,14 +104,11 @@ int main(int argc , char** argv)
 /*********** internal pwd command *********/
          else if(strcmp(args[0],"mypwd")==0)
         {
-		history_log();
                 pwd_command();
 	}
 /*********** cd command *********/
          else if(strcmp(args[0],"cd")==0)
         {
-		history_log();
-
 	        if(argIndex<2)
 			cd_command(NULL);
 		else	  
@@ -114,14 +118,12 @@ int main(int argc , char** argv)
 /*********** type command *********/
          else if(strcmp(args[0],"type")==0)
         {
-		history_log();
                 type_command(args);
         }
 
 /*********** envir command *********/
          else if(strcmp(args[0],"envir")==0)
         {
-		history_log();
 		envir_command();
         }
 
@@ -129,135 +131,33 @@ int main(int argc , char** argv)
 /************ help command ********/
          else if(strcmp(args[0],"help")==0)
         {
-		history_log();
 		help_command();
         }
 
 /************internal free command ********/
          else if(strcmp(args[0],"myfree")==0)
         {
-		history_log();
 		free_command();
         }
 
 /************internal uptime command ********/
          else if(strcmp(args[0],"myuptime")==0)
         {
-		history_log();
 		uptime_command();
         }
 
 /************internal phist command ********/
        else if(strcmp(args[0],"phist")==0)
         {
-		history_log();
 		phist_command();
         }
 	  
 /*********** not internal command ********/
        else
-       {  
-	       history_log();
-
-	       int flag=0;
-	       for(int i=0;i<argIndex;i++)
-	       {
-	    /*its pipe command*/
-	       if(strcmp(args[i],"|")==0)
-	       {
-		  
-             int pipe_pos=i;
-	    /*dynamically allocates memory for argList1*/
-             argList1=malloc((pipe_pos)*sizeof(char* ));
-           /*if theres failure in malloc*/
-             if(argList1==NULL)
-            perror("malloc");
-
-            for (int i=0;i<pipe_pos;i++)
-            {/*storing tokenised commands before pipe in argList*/
-                argList1[i]=args[i];
-            }
-
-           /*terminate argList by NULL*/
-             argList1[pipe_pos]=NULL;
-	   
-           /*dynamically allocates memory for argList2*/
-            argList2=malloc(((argIndex-pipe_pos)-1)*sizeof(char* ));
-           /*if theres failure in malloc*/
-            if(argList2==NULL)
-           perror("malloc");
-
-          int initial =pipe_pos+1;
-	  
-          for (int i=0;i<((argIndex-pipe_pos)-1);i++)
-          {/*storing tokenised commands after pipe in argList*/
-                 argList2[i]=args[initial];
-
-		printf("%s ",argList2[i]);
-          }
-
-          /*terminate argList2 by NULL*/
-           argList2[((argIndex-pipe_pos)-1)]=NULL;
-
-          pipe_command(argList1,argList2);
-
-	  flag=1;
-	  free(argList1);
-	  free(argList2);
-
-	  break;
-	  }
-
-	  /*its input redirection command*/
-          if(strcmp(args[i],"<")==0)
-         {
-		 flag=1;
-		 redir_command(0,args[i+1],i);
-		 if(strcmp(args[0],"exit")==0)
-			 return 0;
-		 break;
-         }
-
-          /*its output redirection command*/
-         else if(strcmp(args[i],">")==0)
-         {
-		 flag=1;
-                 redir_command(1,args[i+1],i);
-		 if(strcmp(args[0],"exit")==0)
-                         return 0;
-
-		 break;
-         }
-
-          /*its error redirection command*/
-         else if(strcmp(args[i],"2>")==0)
-         {
-		 flag=1;
-                 redir_command(2,args[i+1],i);
-		 if(strcmp(args[0],"exit")==0)
-                         return 0;
-
-		 break;
-         }
-
-	/*its append redirection command*/
-         else if(strcmp(args[i],">>")==0)
-         {
-                 flag=1;
-                 redir_command(3,args[i+1],i);
-		 if(strcmp(args[0],"exit")==0)
-                         return 0;
-
-		 break;
-         }
-
-	       }
-	  
-     
-	  if(flag==0) {   
+   	    
           external_command(args);
-	  }
-       }
+	  
+
 
 /* to empty buffer from enterred command*/
 	for(int i=0;i<readSize;i++)

@@ -161,10 +161,26 @@ void phist_command(void);
 
 
 /*
-*paramters (in):int type 0---> input 1--->output 2--->error
+*paramters (in):int type 0---> input 1--->output 2--->error 3--->Append
 *paramters (out):void
 *description:input ,output and error redirection.
 */
 void redir_command(int type,char *file,int location);
+
+/*
+*paramters (in):void
+*paramters (out):int
+*description: check if theres pipe in command and create two arglists and 
+*return 1 if theres pipe and 0 if not.
+*/
+int pipe_check(void);
+
+/*
+*paramters (in):void
+*paramters (out):int
+*description:check if theres redir symbol and if so calls redir_command and 
+*return 1 in case of found to not check in other if cases in int main.
+*/
+int redir_check(void);
 
 #endif
